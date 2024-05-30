@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NHL Teams Visualization</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <h1 id="title">National Hockey League Data Visualization</h1>
+    <h2 id="map">NHL teams locations</h2>
+    <div id="svg-container"></div>
+    <h2>NHL Teams and Their Stanley Cups</h2>
+    <div id="chart"></div>
+    <h2>Goalie Saves per season</h2>
+    <div>
+      <label for="bar-season-select">Choose a season:</label>
+      <select id="bar-season-select">
+        <option value="2023-2024">2023-2024</option>
+        <option value="2022-2023">2022-2023</option>
+      </select>
+    </div>
+    <svg id="bar-chart-container"></svg>
+    <h2>Player strenghts</h2>
+    <div>
+      <label for="player-select">Choose a player:</label>
+      <select id="player-select"></select>
+    </div>
+    <svg id="radar-chart" class="radar-chart"></svg>
+    <h2>Body Injuries by Season</h2>
+    <div>
+      <label for="season-dropdown">Select a season:</label>
+      <select id="season-dropdown"></select>
+    </div>
+    <svg id="pie-chart-svg"></svg>
+    <script src="script.js"></script>
+  </body>
+</html>
