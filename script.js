@@ -179,7 +179,7 @@ d3.csv("stanley_cup.csv").then(function (data) {
       return y(d.cups);
     })
     .attr("r", 4)
-    .style("fill", "steelblue")
+    .style("fill", "#ff7f50")
     .on("mouseover", function (event, d) {
       lineTooltip.transition().duration(200).style("opacity", 0.9);
       lineTooltip
@@ -201,7 +201,6 @@ var totalHeight =
 document.getElementById("svg-container").style.height = totalHeight + "px";
 
 // bar chart
-// bar chart
 const barMargin = { top: 20, right: 70, bottom: 150, left: 80 };
 const barWidth = 800 - barMargin.left - barMargin.right;
 const barHeight = 500 - barMargin.top - barMargin.bottom;
@@ -212,6 +211,18 @@ const svgBarChart = d3
   .attr("height", barHeight + barMargin.top + barMargin.bottom)
   .append("g")
   .attr("transform", `translate(${barMargin.left},${barMargin.top})`);
+
+// Define the gradient
+const defs = svgBarChart.append("defs");
+const gradient = defs
+  .append("linearGradient")
+  .attr("id", "barGradient")
+  .attr("x1", "0%")
+  .attr("y1", "0%")
+  .attr("x2", "0%")
+  .attr("y2", "100%");
+gradient.append("stop").attr("offset", "0%").attr("stop-color", "#ff7f50");
+gradient.append("stop").attr("offset", "100%").attr("stop-color", "#ff4500");
 
 const yBarChart = d3.scaleLinear().range([barHeight, 0]);
 
@@ -224,6 +235,12 @@ const yAxisBarChart = svgBarChart.append("g").attr("class", "axis-label");
 
 const barSeasonSelect = d3.select("#bar-season-select");
 
+const barTooltip = d3
+  .select("body")
+  .append("div")
+  .attr("class", "tooltip")
+  .style("opacity", 0);
+
 function updateBarChart(data) {
   const xScale = d3
     .scaleBand()
@@ -234,33 +251,33 @@ function updateBarChart(data) {
   yBarChart.domain([0, d3.max(data, (d) => d.saves)]);
 
   xAxisBarChart
-  .call(d3.axisBottom(xScale))
-  .selectAll("text")
-  .attr("transform", "rotate(-45)")
-  .style("text-anchor", "end")
-  .attr("dx", "-0.5em")
-  .attr("dy", "0.5em");
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("transform", "rotate(-45)")
+    .style("text-anchor", "end")
+    .attr("dx", "-0.5em")
+    .attr("dy", "0.5em");
 
-svgBarChart.append("text") 
-  .attr("x", barWidth / 2)
-  .attr("y", barHeight + barMargin.bottom - 10) 
-  .attr("fill", "#000")
-  .style("text-anchor", "middle")
-  .attr("font-size", "14px") 
-  .text("Goalie");
-
+  svgBarChart
+    .append("text")
+    .attr("x", barWidth / 2)
+    .attr("y", barHeight + barMargin.bottom - 10)
+    .attr("fill", "#000")
+    .style("text-anchor", "middle")
+    .attr("font-size", "14px")
+    .text("Goalie");
 
   yAxisBarChart.call(d3.axisLeft(yBarChart));
 
-  svgBarChart.append("text") 
-      .attr("transform", "rotate(-90)")
-      .attr("y", -barMargin.left + 20) 
-      .attr("x", -barHeight / 2)
-      .attr("dy", "0.71em")
-      .style("text-anchor", "middle")
-      .attr("font-size", "14px") 
-      .text("Number of Saves");
-  
+  svgBarChart
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -barMargin.left + 20)
+    .attr("x", -barHeight / 2)
+    .attr("dy", "0.71em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "14px")
+    .text("Number of Saves");
 
   const bars = svgBarChart.selectAll(".bar").data(data);
 
@@ -272,7 +289,20 @@ svgBarChart.append("text")
     .attr("x", (d) => xScale(d.goalie))
     .attr("y", (d) => yBarChart(d.saves))
     .attr("width", xScale.bandwidth())
-    .attr("height", (d) => barHeight - yBarChart(d.saves));
+    .attr("height", (d) => barHeight - yBarChart(d.saves))
+    .style("fill", "url(#barGradient)")
+    // Add tooltip on mouseover
+    .on("mouseover", function (event, d) {
+      const savesValue = d.saves;
+      barTooltip.transition().duration(200).style("opacity", 0.9);
+      barTooltip
+        .html(`<strong>Saves:</strong> ${savesValue}`)
+        .style("left", event.pageX + "px")
+        .style("top", event.pageY - 28 + "px");
+    })
+    .on("mouseout", function (d) {
+      barTooltip.transition().duration(500).style("opacity", 0);
+    });
 
   bars.exit().remove();
 
@@ -315,199 +345,297 @@ const radarMargin = { top: 20, right: 30, bottom: 30, left: 40 };
 const radarScale = d3.scaleLinear().range([0, radarWidth / 2]);
 const radarAngleScale = d3.scaleBand().range([0, 2 * Math.PI]);
 
-const radarSVG = d3.select("#radar-chart")
+const radarSVG = d3
+  .select("#radar-chart")
   .attr("width", radarWidth + radarMargin.left + radarMargin.right)
   .attr("height", radarHeight + radarMargin.top + radarMargin.bottom)
   .append("g")
-  .attr("transform", `translate(${radarWidth / 2 + radarMargin.left},${radarHeight / 2 + radarMargin.top})`);
+  .attr(
+    "transform",
+    `translate(${radarWidth / 2 + radarMargin.left},${
+      radarHeight / 2 + radarMargin.top
+    })`
+  );
 
 function updateRadarChart(data, maxValues) {
-  const maxStat = d3.max(data, d => d.value);
+  const maxStat = d3.max(data, (d) => d.value);
   radarScale.domain([0, maxStat]);
 
-  radarAngleScale.domain(data.map(d => d.stat));
+  radarAngleScale.domain(data.map((d) => d.stat));
 
   radarSVG.selectAll("*").remove();
 
-  const radarAxes = radarSVG.selectAll(".radar-axis")
+  // Add radial gridlines
+  radarSVG
+    .selectAll(".radar-grid")
+    .data(radarScale.ticks(5).slice(1))
+    .enter()
+    .append("circle")
+    .attr("class", "radar-grid")
+    .attr("r", (d) => radarScale(d))
+    .style("stroke", "#aaa")
+    .style("fill", "none")
+    .style("stroke-opacity", 0.5);
+
+  const radarAxes = radarSVG
+    .selectAll(".radar-axis")
     .data(data)
-    .enter().append("g")
+    .enter()
+    .append("g")
     .attr("class", "radar-axis");
 
-  radarAxes.append("line")
+  radarAxes
+    .append("line")
     .attr("x1", 0)
     .attr("y1", 0)
-    .attr("x2", (d, i) => radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2))
-    .attr("y2", (d, i) => radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2))
+    .attr(
+      "x2",
+      (d, i) =>
+        radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
+    )
+    .attr(
+      "y2",
+      (d, i) =>
+        radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
+    )
     .attr("stroke", "black");
 
-  radarAxes.append("text")
-    .attr("x", (d, i) => radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2))
-    .attr("y", (d, i) => radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2))
+  // Add axes labels
+  radarAxes
+    .append("text")
+    .attr(
+      "x",
+      (d, i) =>
+        radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
+    )
+    .attr(
+      "y",
+      (d, i) =>
+        radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
+    )
     .attr("dy", "-0.5em")
     .attr("text-anchor", "middle")
-    .text(d => maxValues[d.stat]);
+    .text((d) => maxValues[d.stat]);
 
-  const radarArea = d3.areaRadial()
+  const radarArea = d3
+    .areaRadial()
     .angle((d, i) => radarAngleScale(d.stat))
     .outerRadius((d, i) => radarScale(d.value))
     .curve(d3.curveLinearClosed);
 
-  radarSVG.append("path")
+  radarSVG
+    .append("path")
     .datum(data)
-    .attr("fill", "steelblue")
+    .attr("fill", "#ff7f50")
     .attr("fill-opacity", 0.5)
-    .attr("stroke", "steelblue")
+    .attr("stroke", "#ff7f50")
     .attr("d", radarArea);
 
-  radarAxes.append("text")
-    .attr("x", (d, i) => radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2))
-    .attr("y", (d, i) => radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2))
+  // Add labels for each data point
+  radarAxes
+    .append("text")
+    .attr(
+      "x",
+      (d, i) =>
+        radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
+    )
+    .attr(
+      "y",
+      (d, i) =>
+        radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
+    )
     .attr("dy", "1em")
     .attr("text-anchor", "middle")
-    .text(d => d.stat);
+    .text((d) => d.stat);
 
-  const radarPoints = radarSVG.selectAll(".radar-point")
+  const radarPoints = radarSVG
+    .selectAll(".radar-point")
     .data(data)
-    .enter().append("circle")
+    .enter()
+    .append("circle")
     .attr("class", "radar-point")
-    .attr("cx", (d, i) => radarScale(d.value) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2))
-    .attr("cy", (d, i) => radarScale(d.value) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2))
+    .attr(
+      "cx",
+      (d, i) =>
+        radarScale(d.value) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
+    )
+    .attr(
+      "cy",
+      (d, i) =>
+        radarScale(d.value) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
+    )
     .attr("r", 5)
-    .attr("fill", "steelblue");
+    .attr("fill", "#ff7f50")
+    .append("title") // Add tooltip
+    .text((d) => `${d.stat}: ${d.value}`); // Set tooltip text
 }
 
-d3.csv("PlayerPerformanceInPlayoffs.csv").then(data => {
-  const players = Array.from(new Set(data.map(d => d.Player)));
+d3.csv("PlayerPerformanceInPlayoffs.csv").then((data) => {
+  const players = Array.from(new Set(data.map((d) => d.Player)));
 
   const playerSelect = d3.select("#player-select");
-  playerSelect.selectAll("option")
+  playerSelect
+    .selectAll("option")
     .data(players)
-    .enter().append("option")
-    .attr("value", d => d)
-    .text(d => d);
+    .enter()
+    .append("option")
+    .attr("value", (d) => d)
+    .text((d) => d);
 
   const maxValues = {
     Goals: 50,
     Assists: 30,
     Hits: 100,
     Takeaways: 20,
-    PIMDrawn: 50
+    PIMDrawn: 50,
   };
 
-  playerSelect.on("change", function() {
+  playerSelect.on("change", function () {
     const selectedPlayer = playerSelect.node().value;
-    const playerData = data.filter(d => d.Player === selectedPlayer)[0];
+    const playerData = data.filter((d) => d.Player === selectedPlayer)[0];
     const radarData = [
       { stat: "Goals", value: +playerData.Goals },
       { stat: "Assists", value: +playerData.Assists },
       { stat: "Hits", value: +playerData.Hits },
       { stat: "Takeaways", value: +playerData.Takeaways },
-      { stat: "PIMDrawn", value: +playerData.PIMDrawn }
+      { stat: "PIMDrawn", value: +playerData.PIMDrawn },
     ];
     updateRadarChart(radarData, maxValues);
   });
+
+  // Trigger change event for the first player
+  playerSelect.dispatch("change");
 });
 
-
+//pie chart
 // Load the data for body injuries by season
-d3.csv("InjuriesByArea.csv").then(function(data) {
-    // Parse the data
-    data.forEach(function(d) {
-        d["2018-2019"] = +d["2018-2019"];
-        d["2019-2020"] = +d["2019-2020"];
-        d["2020-2021"] = +d["2020-2021"];
-        d["2021-2022"] = +d["2021-2022"];
+d3.csv("InjuriesByArea.csv").then(function (data) {
+  // Parse the data
+  data.forEach(function (d) {
+    // Convert the values to numbers
+    d["2018-2019"] = +d["2018-2019"];
+    d["2019-2020"] = +d["2019-2020"];
+    d["2020-2021"] = +d["2020-2021"];
+    d["2021-2022"] = +d["2021-2022"];
+  });
+
+  // Create a dropdown for season selection
+  const seasonDropdown = d3.select("#season-dropdown");
+  seasonDropdown
+    .selectAll("option")
+    .data(data.columns.slice(1))
+    .enter()
+    .append("option")
+    .text(function (d) {
+      return d;
+    })
+    .attr("value", function (d) {
+      return d;
     });
 
-    // Create a pie chart function
-    function createPieChart(seasonData) {
-        // Remove existing pie chart
-        d3.select("#pie-chart-svg").selectAll("*").remove();
+  // Initial pie chart with the first season data
+  const initialSeasonData = data.map(function (d) {
+    return {
+      Location: d.Location,
+      value: d["2018-2019"],
+    };
+  });
+  createPieChart(initialSeasonData);
 
-        // Set up pie chart parameters
-        const pieWidth = 500;
-        const pieHeight = 500;
-        const pieRadius = Math.min(pieWidth, pieHeight) / 2;
-
-        const color = d3.scaleOrdinal()
-            .domain(data.columns.slice(1))
-            .range(d3.schemeSet2);
-
-        const arc = d3.arc()
-            .outerRadius(pieRadius - 10)
-            .innerRadius(0);
-
-        const pie = d3.pie()
-            .sort(null)
-            .value(function(d) { return d.value; });
-
-        const svg = d3.select("#pie-chart-svg")
-            .attr("width", pieWidth)
-            .attr("height", pieHeight)
-            .append("g")
-            .attr("transform", "translate(" + pieWidth / 2 + "," + pieHeight / 2 + ")");
-
-        // Create pie chart slices
-        const g = svg.selectAll(".arc")
-            .data(pie(seasonData))
-            .enter().append("g")
-            .attr("class", "arc");
-
-        // Append paths for pie chart slices
-        g.append("path")
-            .attr("d", arc)
-            .style("fill", function(d) { return color(d.data.Location); });
-
-        // Add labels to pie chart slices with rotation
-        const labelArc = d3.arc()
-            .outerRadius(pieRadius - 40)
-            .innerRadius(pieRadius - 40);
-
-        g.append("text")
-            .attr("transform", function(d) {
-                const pos = labelArc.centroid(d);
-                const angle = (d.startAngle + d.endAngle) / 2;
-                return "translate(" + pos + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
-            })
-            .attr("dy", ".35em")
-            .text(function(d) { return d.data.Location; })
-            .attr("text-anchor", function(d) {
-                // Set the text anchor based on the angle
-                const angle = (d.startAngle + d.endAngle) / 2;
-                return angle > Math.PI ? "end" : "start";
-            })
-            .style("fill", "black");
-    }
-
-    // Create a dropdown for season selection
-    const seasonDropdown = d3.select("#season-dropdown");
-    seasonDropdown.selectAll("option")
-        .data(data.columns.slice(1))
-        .enter()
-        .append("option")
-        .text(function(d) { return d; })
-        .attr("value", function(d) { return d; });
-
-    // Initial pie chart with the first season data
-    createPieChart(data[0]);
-
-    // Update the pie chart when a new season is selected
-    seasonDropdown.on("change", function() {
-        const selectedSeason = seasonDropdown.property("value");
-        const seasonData = data.map(function(d) {
-            return { Location: d.Location, value: d[selectedSeason] };
-        });
-        createPieChart(seasonData);
+  // Update the pie chart when a new season is selected
+  seasonDropdown.on("change", function () {
+    const selectedSeason = seasonDropdown.property("value");
+    const seasonData = data.map(function (d) {
+      return {
+        Location: d.Location,
+        value: d[selectedSeason],
+      };
     });
+    createPieChart(seasonData);
+  });
 });
 
+function createPieChart(seasonData) {
+  // Remove existing pie chart
+  d3.select("#pie-chart-svg").selectAll("*").remove();
+  d3.select("#legend").selectAll("*").remove();
+  d3.select("#values").selectAll("*").remove(); // Clear existing values
 
+  // Set up pie chart parameters
+  const pieWidth = 600;
+  const pieHeight = 400;
+  const pieRadius = Math.min(pieWidth, pieHeight) / 2;
 
+  const customColors = ["#FFD3A6", "#FFC277", "#FFB81C", "#E69900", "#D2001C", "#BF0816", "#9E0015", "#73000E", "#470007", "#250001"];
 
+  const color = d3
+    .scaleOrdinal()
+    .domain(seasonData.map((d) => d.Location))
+    .range(customColors); // Use custom colors here
 
+  const arc = d3
+    .arc()
+    .outerRadius(pieRadius)
+    .innerRadius(0);
 
+  const arcOver = d3
+    .arc()
+    .outerRadius(pieRadius + 10) // Increase the outer radius slightly upon hover
+    .innerRadius(0); // Adjust the inner radius to keep the thickness constant
 
+  const pie = d3
+    .pie()
+    .sort(null)
+    .value((d) => d.value);
 
+  const svg = d3
+    .select("#pie-chart-svg")
+    .attr("width", pieWidth)
+    .attr("height", pieHeight)
+    .append("g")
+    .attr(
+      "transform",
+      "translate(" + pieWidth / 2 + "," + pieHeight / 2 + ")"
+    );
+
+  // Generate pie chart
+  const arcs = svg.selectAll(".arc")
+    .data(pie(seasonData))
+    .enter()
+    .append("g")
+    .attr("class", "arc");
+
+  arcs.append("path")
+    .attr("d", arc)
+    .attr("fill", (d, i) => color(i))
+    .on("mouseover", function (d) {
+      d3.select(this).transition()
+        .duration("50")
+        .attr("d", arcOver); // Change the arc to the arcOver upon hover
+      const total = d3.sum(seasonData, d => d.value);
+      const percentage = Math.round((d.data.value / total) * 100);
+      d3.select(this.parentNode).select("title").text(`${d.data.Location}: ${d.data.value} (${percentage}%)`);
+    })
+    .on("mouseout", function (d) {
+      d3.select(this).transition()
+        .duration("50")
+        .attr("d", arc); // Revert back to original arc upon mouseout
+    })
+    .append("title")
+    .text(d => `${d.data.Location}: ${d.data.value}`);
+
+  // Legend
+  const legend = d3.select("#legend");
+  seasonData.forEach((d, i) => {
+    const legendItem = legend.append("div").attr("class", "legend-item");
+
+    legendItem
+      .append("div")
+      .attr("class", "legend-color-box")
+      .style("background-color", color(d.Location));
+
+    legendItem.append("span").text(`${d.Location}`);
+  });
+}
 
 
