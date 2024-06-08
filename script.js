@@ -201,6 +201,7 @@ var totalHeight =
 document.getElementById("svg-container").style.height = totalHeight + "px";
 
 // bar chart
+// bar chart
 const barMargin = { top: 20, right: 70, bottom: 150, left: 80 };
 const barWidth = 800 - barMargin.left - barMargin.right;
 const barHeight = 500 - barMargin.top - barMargin.bottom;
@@ -322,22 +323,35 @@ function updateBarChart(data) {
   logos.exit().remove();
 }
 
+// Read CSV file to get unique seasons
 d3.csv("goalieSaves.csv").then((data) => {
+  // Parse CSV data
   data.forEach((d) => {
     d.saves = +d.saves;
   });
 
+  // Extract unique seasons
   const seasons = d3.group(data, (d) => d.season.slice(0, 9));
 
-  updateBarChart(seasons.get("2023-2024"));
+  // Populate dropdown options
+  barSeasonSelect.selectAll("option").remove(); // Remove existing options
+  seasons.forEach((_, season) => {
+    barSeasonSelect.append("option").text(season).attr("value", season);
+  });
 
+  // Initialize chart with the first season
+  updateBarChart(seasons.get(data[0].season.slice(0, 9)));
+
+  // Event listener for dropdown change
   barSeasonSelect.on("change", function () {
-    const selectedSeason = barSeasonSelect.node().value;
+    const selectedSeason = this.value;
     updateBarChart(seasons.get(selectedSeason));
   });
 });
 
+
 //radar chart
+// Radar chart setup
 const radarWidth = 400;
 const radarHeight = 400;
 const radarMargin = { top: 20, right: 30, bottom: 30, left: 40 };
@@ -352,15 +366,12 @@ const radarSVG = d3
   .append("g")
   .attr(
     "transform",
-    `translate(${radarWidth / 2 + radarMargin.left},${
-      radarHeight / 2 + radarMargin.top
-    })`
+    `translate(${radarWidth / 2 + radarMargin.left},${radarHeight / 2 + radarMargin.top})`
   );
 
 function updateRadarChart(data, maxValues) {
   const maxStat = d3.max(data, (d) => d.value);
   radarScale.domain([0, maxStat]);
-
   radarAngleScale.domain(data.map((d) => d.stat));
 
   radarSVG.selectAll("*").remove();
@@ -466,46 +477,72 @@ function updateRadarChart(data, maxValues) {
     )
     .attr("r", 5)
     .attr("fill", "#ff7f50")
-    .append("title") // Add tooltip
-    .text((d) => `${d.stat}: ${d.value}`); // Set tooltip text
+    .append("title")
+    .text((d) => `${d.stat}: ${d.value}`);
 }
 
+// Load data and setup dropdowns
 d3.csv("PlayerPerformanceInPlayoffs.csv").then((data) => {
-  const players = Array.from(new Set(data.map((d) => d.Player)));
+  const seasons = Array.from(new Set(data.map((d) => d.Season)));
 
   const playerSelect = d3.select("#player-select");
-  playerSelect
+  const seasonSelect = d3.select("#season-select");
+
+  seasonSelect
     .selectAll("option")
-    .data(players)
+    .data(seasons)
     .enter()
     .append("option")
     .attr("value", (d) => d)
     .text((d) => d);
 
-  const maxValues = {
-    Goals: 50,
-    Assists: 30,
-    Hits: 100,
-    Takeaways: 20,
-    PIMDrawn: 50,
-  };
-
-  playerSelect.on("change", function () {
-    const selectedPlayer = playerSelect.node().value;
-    const playerData = data.filter((d) => d.Player === selectedPlayer)[0];
-    const radarData = [
-      { stat: "Goals", value: +playerData.Goals },
-      { stat: "Assists", value: +playerData.Assists },
-      { stat: "Hits", value: +playerData.Hits },
-      { stat: "Takeaways", value: +playerData.Takeaways },
-      { stat: "PIMDrawn", value: +playerData.PIMDrawn },
-    ];
-    updateRadarChart(radarData, maxValues);
+  // Calculate maxValues dynamically
+  const maxValues = {};
+  const stats = ["Goals", "Assists", "Hits", "Takeaways", "PIMDrawn"];
+  stats.forEach(stat => {
+    maxValues[stat] = d3.max(data, d => +d[stat]);
   });
 
-  // Trigger change event for the first player
-  playerSelect.dispatch("change");
+  function updatePlayerOptions() {
+    const selectedSeason = seasonSelect.node().value;
+    const playersForSeason = data
+      .filter(d => d.Season === selectedSeason)
+      .map(d => d.Player);
+
+    playerSelect.selectAll("option").remove();
+
+    playerSelect
+      .selectAll("option")
+      .data(playersForSeason)
+      .enter()
+      .append("option")
+      .attr("value", (d) => d)
+      .text((d) => d);
+
+    updateChart(); // Automatically update chart for the first player of the selected season
+  }
+
+  function updateChart() {
+    const selectedPlayer = playerSelect.node().value;
+    const selectedSeason = seasonSelect.node().value;
+    const playerData = data.filter(
+      (d) => d.Player === selectedPlayer && d.Season === selectedSeason
+    )[0];
+    const radarData = stats.map(stat => ({
+      stat: stat,
+      value: +playerData[stat]
+    }));
+    updateRadarChart(radarData, maxValues);
+  }
+
+  playerSelect.on("change", updateChart);
+  seasonSelect.on("change", updatePlayerOptions);
+
+  // Trigger change event for the first season
+  seasonSelect.dispatch("change");
 });
+
+
 
 //pie chart
 // Load the data for body injuries by season
