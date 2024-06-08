@@ -101,7 +101,6 @@ svg {
 margin: 60px 60px 60px 60px;
 }
 
-/* Dropdown Styles */
 .selection-style {
   appearance: none;
   background-color: #fff;
@@ -143,7 +142,6 @@ margin: 60px 60px 60px 60px;
   color: #333;
 }
 
-/* Dropdown Container Styles */
 .dropdown-container {
   display: inline-block;
   position: relative;

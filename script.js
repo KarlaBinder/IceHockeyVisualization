@@ -1,5 +1,5 @@
 //map chart
-d3.xml("map.svg").then(function (svg) {
+d3.xml("svg/map.svg").then(function (svg) {
   document.getElementById("svg-container").appendChild(svg.documentElement);
 
   var teamColors = {
@@ -83,7 +83,7 @@ d3.xml("map.svg").then(function (svg) {
 });
 
 //line chart
-d3.csv("stanley_cup.csv").then(function (data) {
+d3.csv("data/stanley_cup.csv").then(function (data) {
   data.forEach(function (d) {
     d.cups = +d["Stanley Cups"];
   });
@@ -201,7 +201,6 @@ var totalHeight =
 document.getElementById("svg-container").style.height = totalHeight + "px";
 
 // bar chart
-// bar chart
 const barMargin = { top: 20, right: 70, bottom: 150, left: 80 };
 const barWidth = 800 - barMargin.left - barMargin.right;
 const barHeight = 500 - barMargin.top - barMargin.bottom;
@@ -213,7 +212,6 @@ const svgBarChart = d3
   .append("g")
   .attr("transform", `translate(${barMargin.left},${barMargin.top})`);
 
-// Define the gradient
 const defs = svgBarChart.append("defs");
 const gradient = defs
   .append("linearGradient")
@@ -292,7 +290,6 @@ function updateBarChart(data) {
     .attr("width", xScale.bandwidth())
     .attr("height", (d) => barHeight - yBarChart(d.saves))
     .style("fill", "url(#barGradient)")
-    // Add tooltip on mouseover
     .on("mouseover", function (event, d) {
       const savesValue = d.saves;
       barTooltip.transition().duration(200).style("opacity", 0.9);
@@ -323,35 +320,27 @@ function updateBarChart(data) {
   logos.exit().remove();
 }
 
-// Read CSV file to get unique seasons
-d3.csv("goalieSaves.csv").then((data) => {
-  // Parse CSV data
+d3.csv("data/goalie_saves.csv").then((data) => {
   data.forEach((d) => {
     d.saves = +d.saves;
   });
 
-  // Extract unique seasons
   const seasons = d3.group(data, (d) => d.season.slice(0, 9));
 
-  // Populate dropdown options
-  barSeasonSelect.selectAll("option").remove(); // Remove existing options
+  barSeasonSelect.selectAll("option").remove(); 
   seasons.forEach((_, season) => {
     barSeasonSelect.append("option").text(season).attr("value", season);
   });
 
-  // Initialize chart with the first season
   updateBarChart(seasons.get(data[0].season.slice(0, 9)));
 
-  // Event listener for dropdown change
   barSeasonSelect.on("change", function () {
     const selectedSeason = this.value;
     updateBarChart(seasons.get(selectedSeason));
   });
 });
 
-
 //radar chart
-// Radar chart setup
 const radarWidth = 400;
 const radarHeight = 400;
 const radarMargin = { top: 20, right: 30, bottom: 30, left: 40 };
@@ -376,7 +365,6 @@ function updateRadarChart(data, maxValues) {
 
   radarSVG.selectAll("*").remove();
 
-  // Add radial gridlines
   radarSVG
     .selectAll(".radar-grid")
     .data(radarScale.ticks(5).slice(1))
@@ -411,7 +399,6 @@ function updateRadarChart(data, maxValues) {
     )
     .attr("stroke", "black");
 
-  // Add axes labels
   radarAxes
     .append("text")
     .attr(
@@ -442,7 +429,6 @@ function updateRadarChart(data, maxValues) {
     .attr("stroke", "#ff7f50")
     .attr("d", radarArea);
 
-  // Add labels for each data point
   radarAxes
     .append("text")
     .attr(
@@ -481,8 +467,7 @@ function updateRadarChart(data, maxValues) {
     .text((d) => `${d.stat}: ${d.value}`);
 }
 
-// Load data and setup dropdowns
-d3.csv("PlayerPerformanceInPlayoffs.csv").then((data) => {
+d3.csv("data/player_performance_in_playoffs.csv").then((data) => {
   const seasons = Array.from(new Set(data.map((d) => d.Season)));
 
   const playerSelect = d3.select("#player-select");
@@ -496,7 +481,6 @@ d3.csv("PlayerPerformanceInPlayoffs.csv").then((data) => {
     .attr("value", (d) => d)
     .text((d) => d);
 
-  // Calculate maxValues dynamically
   const maxValues = {};
   const stats = ["Goals", "Assists", "Hits", "Takeaways", "PIMDrawn"];
   stats.forEach(stat => {
@@ -519,7 +503,7 @@ d3.csv("PlayerPerformanceInPlayoffs.csv").then((data) => {
       .attr("value", (d) => d)
       .text((d) => d);
 
-    updateChart(); // Automatically update chart for the first player of the selected season
+    updateChart(); 
   }
 
   function updateChart() {
@@ -538,25 +522,18 @@ d3.csv("PlayerPerformanceInPlayoffs.csv").then((data) => {
   playerSelect.on("change", updateChart);
   seasonSelect.on("change", updatePlayerOptions);
 
-  // Trigger change event for the first season
   seasonSelect.dispatch("change");
 });
 
-
-
 //pie chart
-// Load the data for body injuries by season
-d3.csv("InjuriesByArea.csv").then(function (data) {
-  // Parse the data
+d3.csv("data/injuries_by_area.csv").then(function (data) {
   data.forEach(function (d) {
-    // Convert the values to numbers
     d["2018-2019"] = +d["2018-2019"];
     d["2019-2020"] = +d["2019-2020"];
     d["2020-2021"] = +d["2020-2021"];
     d["2021-2022"] = +d["2021-2022"];
   });
 
-  // Create a dropdown for season selection
   const seasonDropdown = d3.select("#season-dropdown");
   seasonDropdown
     .selectAll("option")
@@ -570,7 +547,6 @@ d3.csv("InjuriesByArea.csv").then(function (data) {
       return d;
     });
 
-  // Initial pie chart with the first season data
   const initialSeasonData = data.map(function (d) {
     return {
       Location: d.Location,
@@ -579,7 +555,6 @@ d3.csv("InjuriesByArea.csv").then(function (data) {
   });
   createPieChart(initialSeasonData);
 
-  // Update the pie chart when a new season is selected
   seasonDropdown.on("change", function () {
     const selectedSeason = seasonDropdown.property("value");
     const seasonData = data.map(function (d) {
@@ -593,12 +568,10 @@ d3.csv("InjuriesByArea.csv").then(function (data) {
 });
 
 function createPieChart(seasonData) {
-  // Remove existing pie chart
   d3.select("#pie-chart-svg").selectAll("*").remove();
   d3.select("#legend").selectAll("*").remove();
-  d3.select("#values").selectAll("*").remove(); // Clear existing values
+  d3.select("#values").selectAll("*").remove(); 
 
-  // Set up pie chart parameters
   const pieWidth = 600;
   const pieHeight = 400;
   const pieRadius = Math.min(pieWidth, pieHeight) / 2;
@@ -608,7 +581,7 @@ function createPieChart(seasonData) {
   const color = d3
     .scaleOrdinal()
     .domain(seasonData.map((d) => d.Location))
-    .range(customColors); // Use custom colors here
+    .range(customColors); 
 
   const arc = d3
     .arc()
@@ -617,8 +590,8 @@ function createPieChart(seasonData) {
 
   const arcOver = d3
     .arc()
-    .outerRadius(pieRadius + 10) // Increase the outer radius slightly upon hover
-    .innerRadius(0); // Adjust the inner radius to keep the thickness constant
+    .outerRadius(pieRadius + 10) 
+    .innerRadius(0); 
 
   const pie = d3
     .pie()
@@ -635,7 +608,6 @@ function createPieChart(seasonData) {
       "translate(" + pieWidth / 2 + "," + pieHeight / 2 + ")"
     );
 
-  // Generate pie chart
   const arcs = svg.selectAll(".arc")
     .data(pie(seasonData))
     .enter()
@@ -648,7 +620,7 @@ function createPieChart(seasonData) {
     .on("mouseover", function (d) {
       d3.select(this).transition()
         .duration("50")
-        .attr("d", arcOver); // Change the arc to the arcOver upon hover
+        .attr("d", arcOver); 
       const total = d3.sum(seasonData, d => d.value);
       const percentage = Math.round((d.data.value / total) * 100);
       d3.select(this.parentNode).select("title").text(`${d.data.Location}: ${d.data.value} (${percentage}%)`);
@@ -656,12 +628,11 @@ function createPieChart(seasonData) {
     .on("mouseout", function (d) {
       d3.select(this).transition()
         .duration("50")
-        .attr("d", arc); // Revert back to original arc upon mouseout
+        .attr("d", arc); 
     })
     .append("title")
     .text(d => `${d.data.Location}: ${d.data.value}`);
 
-  // Legend
   const legend = d3.select("#legend");
   seasonData.forEach((d, i) => {
     const legendItem = legend.append("div").attr("class", "legend-item");
