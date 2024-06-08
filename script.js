@@ -327,7 +327,7 @@ d3.csv("data/goalie_saves.csv").then((data) => {
 
   const seasons = d3.group(data, (d) => d.season.slice(0, 9));
 
-  barSeasonSelect.selectAll("option").remove(); 
+  barSeasonSelect.selectAll("option").remove();
   seasons.forEach((_, season) => {
     barSeasonSelect.append("option").text(season).attr("value", season);
   });
@@ -355,7 +355,9 @@ const radarSVG = d3
   .append("g")
   .attr(
     "transform",
-    `translate(${radarWidth / 2 + radarMargin.left},${radarHeight / 2 + radarMargin.top})`
+    `translate(${radarWidth / 2 + radarMargin.left},${
+      radarHeight / 2 + radarMargin.top
+    })`
   );
 
 function updateRadarChart(data, maxValues) {
@@ -483,15 +485,15 @@ d3.csv("data/player_performance_in_playoffs.csv").then((data) => {
 
   const maxValues = {};
   const stats = ["Goals", "Assists", "Hits", "Takeaways", "PIMDrawn"];
-  stats.forEach(stat => {
-    maxValues[stat] = d3.max(data, d => +d[stat]);
+  stats.forEach((stat) => {
+    maxValues[stat] = d3.max(data, (d) => +d[stat]);
   });
 
   function updatePlayerOptions() {
     const selectedSeason = seasonSelect.node().value;
     const playersForSeason = data
-      .filter(d => d.Season === selectedSeason)
-      .map(d => d.Player);
+      .filter((d) => d.Season === selectedSeason)
+      .map((d) => d.Player);
 
     playerSelect.selectAll("option").remove();
 
@@ -503,7 +505,7 @@ d3.csv("data/player_performance_in_playoffs.csv").then((data) => {
       .attr("value", (d) => d)
       .text((d) => d);
 
-    updateChart(); 
+    updateChart();
   }
 
   function updateChart() {
@@ -512,9 +514,9 @@ d3.csv("data/player_performance_in_playoffs.csv").then((data) => {
     const playerData = data.filter(
       (d) => d.Player === selectedPlayer && d.Season === selectedSeason
     )[0];
-    const radarData = stats.map(stat => ({
+    const radarData = stats.map((stat) => ({
       stat: stat,
-      value: +playerData[stat]
+      value: +playerData[stat],
     }));
     updateRadarChart(radarData, maxValues);
   }
@@ -570,28 +572,36 @@ d3.csv("data/injuries_by_area.csv").then(function (data) {
 function createPieChart(seasonData) {
   d3.select("#pie-chart-svg").selectAll("*").remove();
   d3.select("#legend").selectAll("*").remove();
-  d3.select("#values").selectAll("*").remove(); 
+  d3.select("#values").selectAll("*").remove();
 
   const pieWidth = 600;
   const pieHeight = 400;
   const pieRadius = Math.min(pieWidth, pieHeight) / 2;
 
-  const customColors = ["#FFD3A6", "#FFC277", "#FFB81C", "#E69900", "#D2001C", "#BF0816", "#9E0015", "#73000E", "#470007", "#250001"];
+  const customColors = [
+    "#FFD3A6",
+    "#FFC277",
+    "#FFB81C",
+    "#E69900",
+    "#D2001C",
+    "#BF0816",
+    "#9E0015",
+    "#73000E",
+    "#470007",
+    "#250001",
+  ];
 
   const color = d3
     .scaleOrdinal()
     .domain(seasonData.map((d) => d.Location))
-    .range(customColors); 
+    .range(customColors);
 
-  const arc = d3
-    .arc()
-    .outerRadius(pieRadius)
-    .innerRadius(0);
+  const arc = d3.arc().outerRadius(pieRadius).innerRadius(0);
 
   const arcOver = d3
     .arc()
-    .outerRadius(pieRadius + 10) 
-    .innerRadius(0); 
+    .outerRadius(pieRadius + 10)
+    .innerRadius(0);
 
   const pie = d3
     .pie()
@@ -603,35 +613,32 @@ function createPieChart(seasonData) {
     .attr("width", pieWidth)
     .attr("height", pieHeight)
     .append("g")
-    .attr(
-      "transform",
-      "translate(" + pieWidth / 2 + "," + pieHeight / 2 + ")"
-    );
+    .attr("transform", "translate(" + pieWidth / 2 + "," + pieHeight / 2 + ")");
 
-  const arcs = svg.selectAll(".arc")
+  const arcs = svg
+    .selectAll(".arc")
     .data(pie(seasonData))
     .enter()
     .append("g")
     .attr("class", "arc");
 
-  arcs.append("path")
+  arcs
+    .append("path")
     .attr("d", arc)
     .attr("fill", (d, i) => color(i))
     .on("mouseover", function (d) {
-      d3.select(this).transition()
-        .duration("50")
-        .attr("d", arcOver); 
-      const total = d3.sum(seasonData, d => d.value);
+      d3.select(this).transition().duration("50").attr("d", arcOver);
+      const total = d3.sum(seasonData, (d) => d.value);
       const percentage = Math.round((d.data.value / total) * 100);
-      d3.select(this.parentNode).select("title").text(`${d.data.Location}: ${d.data.value} (${percentage}%)`);
+      d3.select(this.parentNode)
+        .select("title")
+        .text(`${d.data.Location}: ${d.data.value} (${percentage}%)`);
     })
     .on("mouseout", function (d) {
-      d3.select(this).transition()
-        .duration("50")
-        .attr("d", arc); 
+      d3.select(this).transition().duration("50").attr("d", arc);
     })
     .append("title")
-    .text(d => `${d.data.Location}: ${d.data.value}`);
+    .text((d) => `${d.data.Location}: ${d.data.value}`);
 
   const legend = d3.select("#legend");
   seasonData.forEach((d, i) => {
@@ -645,5 +652,3 @@ function createPieChart(seasonData) {
     legendItem.append("span").text(`${d.Location}`);
   });
 }
-
-

@@ -16,7 +16,7 @@ body {
 #svg-container {
   margin-left: auto;
   margin-right: auto;
-  width: 50%; 
+  width: 50%;
 }
 
 .tooltip {
@@ -34,7 +34,7 @@ body {
   stroke-width: 4px;
 }
 
-#radar-chart{
+#radar-chart {
   margin-top: 100px;
 }
 
@@ -76,7 +76,7 @@ body {
   margin: 20px;
 }
 
-#season-select{
+#season-select {
   margin-bottom: 20px;
 }
 
@@ -97,8 +97,8 @@ svg {
   pointer-events: none;
 }
 
-#pie-chart-svg{
-margin: 60px 60px 60px 60px;
+#pie-chart-svg {
+  margin: 60px 60px 60px 60px;
 }
 
 .selection-style {
@@ -124,7 +124,7 @@ margin: 60px 60px 60px 60px;
 }
 
 .selection-style::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   right: 12px;
@@ -148,7 +148,7 @@ margin: 60px 60px 60px 60px;
 }
 
 .dropdown-container::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   right: 12px;
