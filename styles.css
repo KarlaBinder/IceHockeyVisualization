@@ -35,7 +35,7 @@ body {
 }
 
 #radar-chart {
-  margin-top: 100px;
+  margin-top: 5%; 
 }
 
 .axis-label {
@@ -72,8 +72,8 @@ body {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  width: 45%;
-  margin: 20px;
+  width: 90%;
+  margin: 20px auto;
 }
 
 #season-select {

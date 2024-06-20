@@ -1,4 +1,4 @@
-//map chart
+//Map chart
 d3.xml("svg/map.svg").then(function (svg) {
   document.getElementById("svg-container").appendChild(svg.documentElement);
 
@@ -82,7 +82,7 @@ d3.xml("svg/map.svg").then(function (svg) {
     .style("opacity", 0);
 });
 
-//line chart
+//Line chart
 d3.csv("data/stanley_cup.csv").then(function (data) {
   data.forEach(function (d) {
     d.cups = +d["Stanley Cups"];
@@ -200,7 +200,7 @@ var totalHeight =
 
 document.getElementById("svg-container").style.height = totalHeight + "px";
 
-// bar chart
+//Bar chart
 const barMargin = { top: 20, right: 70, bottom: 150, left: 80 };
 const barWidth = 800 - barMargin.left - barMargin.right;
 const barHeight = 500 - barMargin.top - barMargin.bottom;
@@ -313,8 +313,8 @@ function updateBarChart(data) {
     .merge(logos)
     .attr("x", (d) => xScale(d.goalie) + xScale.bandwidth() / 2 - 15)
     .attr("y", (d) => yBarChart(d.saves) - 20)
-    .attr("width", 30)
-    .attr("height", 30)
+    .attr("width", 40)
+    .attr("height", 40)
     .attr("xlink:href", (d) => d.logo_url);
 
   logos.exit().remove();
@@ -340,194 +340,204 @@ d3.csv("data/goalie_saves.csv").then((data) => {
   });
 });
 
-//radar chart
-const radarWidth = 400;
-const radarHeight = 400;
-const radarMargin = { top: 20, right: 30, bottom: 30, left: 40 };
-
-const radarScale = d3.scaleLinear().range([0, radarWidth / 2]);
-const radarAngleScale = d3.scaleBand().range([0, 2 * Math.PI]);
-
-const radarSVG = d3
-  .select("#radar-chart")
-  .attr("width", radarWidth + radarMargin.left + radarMargin.right)
-  .attr("height", radarHeight + radarMargin.top + radarMargin.bottom)
-  .append("g")
-  .attr(
-    "transform",
-    `translate(${radarWidth / 2 + radarMargin.left},${
-      radarHeight / 2 + radarMargin.top
-    })`
-  );
-
-function updateRadarChart(data, maxValues) {
-  const maxStat = d3.max(data, (d) => d.value);
-  radarScale.domain([0, maxStat]);
-  radarAngleScale.domain(data.map((d) => d.stat));
-
-  radarSVG.selectAll("*").remove();
-
-  radarSVG
-    .selectAll(".radar-grid")
-    .data(radarScale.ticks(5).slice(1))
-    .enter()
-    .append("circle")
-    .attr("class", "radar-grid")
-    .attr("r", (d) => radarScale(d))
-    .style("stroke", "#aaa")
-    .style("fill", "none")
-    .style("stroke-opacity", 0.5);
-
-  const radarAxes = radarSVG
-    .selectAll(".radar-axis")
-    .data(data)
-    .enter()
-    .append("g")
-    .attr("class", "radar-axis");
-
-  radarAxes
-    .append("line")
-    .attr("x1", 0)
-    .attr("y1", 0)
-    .attr(
-      "x2",
-      (d, i) =>
-        radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr(
-      "y2",
-      (d, i) =>
-        radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr("stroke", "black");
-
-  radarAxes
-    .append("text")
-    .attr(
-      "x",
-      (d, i) =>
-        radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr(
-      "y",
-      (d, i) =>
-        radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr("dy", "-0.5em")
-    .attr("text-anchor", "middle")
-    .text((d) => maxValues[d.stat]);
-
-  const radarArea = d3
-    .areaRadial()
-    .angle((d, i) => radarAngleScale(d.stat))
-    .outerRadius((d, i) => radarScale(d.value))
-    .curve(d3.curveLinearClosed);
-
-  radarSVG
-    .append("path")
-    .datum(data)
-    .attr("fill", "#ff7f50")
-    .attr("fill-opacity", 0.5)
-    .attr("stroke", "#ff7f50")
-    .attr("d", radarArea);
-
-  radarAxes
-    .append("text")
-    .attr(
-      "x",
-      (d, i) =>
-        radarScale(maxStat) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr(
-      "y",
-      (d, i) =>
-        radarScale(maxStat) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr("dy", "1em")
-    .attr("text-anchor", "middle")
-    .text((d) => d.stat);
-
-  const radarPoints = radarSVG
-    .selectAll(".radar-point")
-    .data(data)
-    .enter()
-    .append("circle")
-    .attr("class", "radar-point")
-    .attr(
-      "cx",
-      (d, i) =>
-        radarScale(d.value) * Math.cos(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr(
-      "cy",
-      (d, i) =>
-        radarScale(d.value) * Math.sin(radarAngleScale(d.stat) - Math.PI / 2)
-    )
-    .attr("r", 5)
-    .attr("fill", "#ff7f50")
-    .append("title")
-    .text((d) => `${d.stat}: ${d.value}`);
-}
-
+// Radar chart
 d3.csv("data/player_performance_in_playoffs.csv").then((data) => {
-  const seasons = Array.from(new Set(data.map((d) => d.Season)));
-
-  const playerSelect = d3.select("#player-select");
-  const seasonSelect = d3.select("#season-select");
-
-  seasonSelect
-    .selectAll("option")
-    .data(seasons)
-    .enter()
-    .append("option")
-    .attr("value", (d) => d)
-    .text((d) => d);
-
-  const maxValues = {};
-  const stats = ["Goals", "Assists", "Hits", "Takeaways", "PIMDrawn"];
-  stats.forEach((stat) => {
-    maxValues[stat] = d3.max(data, (d) => +d[stat]);
+  data.forEach((d) => {
+    d.Goals = +d.Goals;
+    d.Assists = +d.Assists;
+    d.Hits = +d.Hits;
+    d.Takeaways = +d.Takeaways;
+    d.PIMDrawn = +d.PIMDrawn;
   });
 
-  function updatePlayerOptions() {
-    const selectedSeason = seasonSelect.node().value;
-    const playersForSeason = data
-      .filter((d) => d.Season === selectedSeason)
-      .map((d) => d.Player);
+  const seasons = [...new Set(data.map((d) => d.Season))];
+  const playersBySeason = {};
 
+  data.forEach((d) => {
+    if (!playersBySeason[d.Season]) playersBySeason[d.Season] = [];
+    playersBySeason[d.Season].push(d.Player);
+  });
+
+  const seasonSelect = d3.select("#season-select");
+  seasons.forEach((season) => {
+    seasonSelect.append("option").text(season).attr("value", season);
+  });
+
+  const playerSelect = d3.select("#player-select");
+  function updatePlayerDropdown(season) {
     playerSelect.selectAll("option").remove();
+    playersBySeason[season].forEach((player) => {
+      playerSelect.append("option").text(player).attr("value", player);
+    });
+  }
 
-    playerSelect
-      .selectAll("option")
-      .data(playersForSeason)
+  updatePlayerDropdown(seasons[0]);
+
+  const tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  function drawRadarChart(player, season) {
+    const playerData = data.find(
+      (d) => d.Player === player && d.Season === season
+    );
+    if (!playerData) return;
+
+    d3.select("#radar-chart").selectAll("*").remove();
+
+    const chartData = [
+      { axis: "Goals", value: playerData.Goals },
+      { axis: "Assists", value: playerData.Assists },
+      { axis: "Hits", value: playerData.Hits },
+      { axis: "Takeaways", value: playerData.Takeaways },
+      { axis: "PIMDrawn", value: playerData.PIMDrawn },
+    ];
+
+    const maxValues = {
+      Goals: d3.max(
+        data.filter((d) => d.Season === season),
+        (d) => d.Goals
+      ),
+      Assists: d3.max(
+        data.filter((d) => d.Season === season),
+        (d) => d.Assists
+      ),
+      Hits: d3.max(
+        data.filter((d) => d.Season === season),
+        (d) => d.Hits
+      ),
+      Takeaways: d3.max(
+        data.filter((d) => d.Season === season),
+        (d) => d.Takeaways
+      ),
+      PIMDrawn: d3.max(
+        data.filter((d) => d.Season === season),
+        (d) => d.PIMDrawn
+      ),
+    };
+
+    const width = 400,
+      height = 400;
+    const radius = Math.min(width, height) / 2;
+    const levels = 5;
+    const angleSlice = (Math.PI * 2) / chartData.length;
+
+    const svg = d3
+      .select("#radar-chart")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+    for (let i = 0; i <= levels; i++) {
+      const levelFactor = radius * (i / levels);
+      svg
+        .append("circle")
+        .attr("r", levelFactor)
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-dasharray", "2,2")
+        .style("stroke-opacity", 0.5);
+    }
+
+    const axis = svg
+      .selectAll(".axis")
+      .data(chartData)
       .enter()
-      .append("option")
-      .attr("value", (d) => d)
-      .text((d) => d);
+      .append("g")
+      .attr("class", "axis");
 
-    updateChart();
+    axis
+      .append("line")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", (d, i) => radius * Math.cos(angleSlice * i - Math.PI / 2))
+      .attr("y2", (d, i) => radius * Math.sin(angleSlice * i - Math.PI / 2))
+      .style("stroke", "#CDCDCD")
+      .style("stroke-width", "2px");
+
+    axis
+      .append("text")
+      .attr("class", "legend")
+      .attr(
+        "x",
+        (d, i) => (radius - 20) * Math.cos(angleSlice * i - Math.PI / 2)
+      )
+      .attr(
+        "y",
+        (d, i) => (radius - 5) * Math.sin(angleSlice * i - Math.PI / 2)
+      )
+      .attr("dy", "0.35em")
+      .style("font-size", "10px")
+      .attr("text-anchor", "middle")
+      .text((d) => d.axis);
+
+    const radarLine = d3
+      .lineRadial()
+      .radius((d) => radius * (d.value / maxValues[d.axis]))
+      .angle((d, i) => i * angleSlice);
+
+      chartData.push(chartData[0]);
+
+    svg
+      .append("path")
+      .datum(chartData)
+      .attr("d", radarLine)
+      .style("fill", "rgba(255, 127, 80, 0.5)")
+      .style("stroke", "#ff7f50")
+      .style("stroke-width", 2);
+
+    svg
+      .selectAll(".radarCircle")
+      .data(chartData)
+      .enter()
+      .append("circle")
+      .attr("r", 4)
+      .attr(
+        "cx",
+        (d, i) =>
+          radius *
+          (d.value / maxValues[d.axis]) *
+          Math.cos(angleSlice * i - Math.PI / 2)
+      )
+      .attr(
+        "cy",
+        (d, i) =>
+          radius *
+          (d.value / maxValues[d.axis]) *
+          Math.sin(angleSlice * i - Math.PI / 2)
+      )
+      .style("fill", "#ff7f50")
+      .style("fill-opacity", 0.8)
+      .on("mouseover", function (event, d) {
+        tooltip.transition().duration(200).style("opacity", 0.9);
+        tooltip
+          .html(`${d.axis}: ${d.value}`)
+          .style("left", event.pageX + 5 + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseout", function (d) {
+        tooltip.transition().duration(500).style("opacity", 0);
+      });
   }
 
-  function updateChart() {
-    const selectedPlayer = playerSelect.node().value;
-    const selectedSeason = seasonSelect.node().value;
-    const playerData = data.filter(
-      (d) => d.Player === selectedPlayer && d.Season === selectedSeason
-    )[0];
-    const radarData = stats.map((stat) => ({
-      stat: stat,
-      value: +playerData[stat],
-    }));
-    updateRadarChart(radarData, maxValues);
-  }
+  drawRadarChart(playerSelect.node().value, seasonSelect.node().value);
 
-  playerSelect.on("change", updateChart);
-  seasonSelect.on("change", updatePlayerOptions);
+  seasonSelect.on("change", function () {
+    updatePlayerDropdown(this.value);
+    drawRadarChart(playerSelect.node().value, this.value);
+  });
 
-  seasonSelect.dispatch("change");
+  playerSelect.on("change", function () {
+    drawRadarChart(this.value, seasonSelect.node().value);
+  });
 });
 
-//pie chart
+//Pie chart
 d3.csv("data/injuries_by_area.csv").then(function (data) {
   data.forEach(function (d) {
     d["2018-2019"] = +d["2018-2019"];
@@ -576,7 +586,7 @@ function createPieChart(seasonData) {
 
   const pieWidth = 600;
   const pieHeight = 400;
-  const pieRadius = Math.min(pieWidth, pieHeight) / 2;
+  const pieRadius = Math.min(pieWidth - 20, pieHeight - 20) / 2;
 
   const customColors = [
     "#FFD3A6",
